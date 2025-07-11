@@ -3,26 +3,21 @@ from flask_cors import CORS
 import re
 import time
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+import undetected_chromedriver as uc
 import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 def scrape_contacts(target_url):
-    # Configure Chrome in headless mode with user-agent
-    options = Options()
+    options = uc.ChromeOptions()
     options.headless = True
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-    options.binary_location = "/usr/bin/google-chrome"
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver = uc.Chrome(options=options)
     try:
         driver.get(target_url)
         time.sleep(3)  # Let JS load
