@@ -1,0 +1,7 @@
+services:
+  - type: cron
+    name: contact-info-scraper
+    schedule: "@daily"  # Change to "@hourly" or custom cron as needed
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scraper.py
