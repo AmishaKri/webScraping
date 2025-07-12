@@ -1,7 +1,7 @@
 services:
-  - type: cron
-    name: contact-info-scraper
-    schedule: "@daily"  # Change to "@hourly" or custom cron as needed
-    runtime: python
+  - type: web
+    name: webscraping-app
+    env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python scraping.py
+    startCommand: python app.py
+    plan: free
