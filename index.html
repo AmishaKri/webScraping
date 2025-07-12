@@ -32,14 +32,13 @@
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = 'Scraping...';
 
-            fetch('http://127.0.0.1:5000/scrape', {
+            // Use relative URL to avoid CORS issues
+            fetch('/scrape', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url })
             })
-            .then(response => response.json()
-                .catch(() => { throw new Error('Invalid JSON response'); })
-            )
+            .then(response => response.json())
             .then(data => {
                 if (data.error) {
                     resultsDiv.innerHTML = `<div class="error">${data.error}</div>`;

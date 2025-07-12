@@ -7,7 +7,15 @@ import undetected_chromedriver as uc
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+
+# Configure CORS to allow all origins and methods
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 def scrape_contacts(target_url):
     try:
@@ -41,8 +49,16 @@ def scrape_contacts(target_url):
 def home():
     return send_from_directory('.', 'index.html')
 
-@app.route('/scrape', methods=['POST'])
+@app.route('/scrape', methods=['POST', 'OPTIONS'])
 def scrape():
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+    
     try:
         data = request.get_json()
         print("Received data:", data)
