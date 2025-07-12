@@ -3,8 +3,15 @@ from flask_cors import CORS
 import re
 import time
 from bs4 import BeautifulSoup
-import undetected_chromedriver as uc
 import os
+
+# Try to import undetected_chromedriver with error handling
+try:
+    import undetected_chromedriver as uc
+    print("✅ undetected_chromedriver imported successfully")
+except Exception as e:
+    print(f"❌ Error importing undetected_chromedriver: {e}")
+    uc = None
 
 app = Flask(__name__)
 
@@ -19,6 +26,11 @@ CORS(app, resources={
 
 def scrape_contacts(target_url):
     try:
+        if uc is None:
+            raise Exception("undetected_chromedriver not available")
+            
+        print(f"Starting scrape for URL: {target_url}")
+        
         options = uc.ChromeOptions()
         options.headless = True
         options.add_argument("--no-sandbox")
@@ -26,23 +38,36 @@ def scrape_contacts(target_url):
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
         
-        # Do NOT set options.binary_location - let undetected-chromedriver handle it
+        print("Creating Chrome driver...")
         driver = uc.Chrome(options=options)
+        print("Chrome driver created successfully")
         
+        print(f"Navigating to: {target_url}")
         driver.get(target_url)
         time.sleep(3)  # Let JS load
+        
+        print("Parsing page content...")
         soup = BeautifulSoup(driver.page_source, 'lxml')
         text = soup.get_text()
+        
+        print("Extracting emails and phones...")
         emails = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', text)
         phones = re.findall(r'\+?\d[\d\s\-\(\)]{9,15}', text)
         emails = list(set(emails))
         phones = list(set(phones))
+        
+        print(f"Found {len(emails)} emails and {len(phones)} phone numbers")
         return {"emails": emails, "phones": phones}
+        
     except Exception as e:
         print(f"Error in scrape_contacts: {e}")
+        import traceback
+        print("Full traceback:")
+        print(traceback.format_exc())
         raise e
     finally:
         if 'driver' in locals():
+            print("Closing Chrome driver...")
             driver.quit()
 
 @app.route('/')
@@ -75,6 +100,9 @@ def scrape():
             return jsonify({"error": str(e)}), 500
     except Exception as e:
         print("General error in /scrape:", e)
+        import traceback
+        print("Full traceback:")
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
